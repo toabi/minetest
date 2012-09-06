@@ -1087,12 +1087,13 @@ static TileDef read_tiledef(lua_State *L, int index)
 	ContentFeatures
 */
 
-static ContentFeatures read_content_features(lua_State *L, int index)
+static ContentFeatures read_content_features(lua_State *L, int index,
+		ContentFeatures f_base = ContentFeatures())
 {
 	if(index < 0)
 		index = lua_gettop(L) + 1 + index;
 
-	ContentFeatures f;
+	ContentFeatures f = f_base;
 	
 	/* Cache existence of some callbacks */
 	lua_getfield(L, index, "on_construct");
@@ -2260,6 +2261,26 @@ private:
 		return 0;
 	}
 
+	// set_nodedef(self, def_base, def_changes)
+	static int l_set_nodedef(lua_State *L)
+	{
+		NodeMetaRef *ref = checkobject(L, 1);
+		luaL_checktype(L, 2, LUA_TTABLE);
+		luaL_checktype(L, 3, LUA_TTABLE);
+		ContentFeatures def_base = read_content_features(L, 2);
+		ContentFeatures def = read_content_features(L, 3, def_base);
+		std::ostringstream os(std::ios::binary);
+		def.serialize(os);
+		const std::string &str = os.str();
+
+		NodeMetadata *meta = getmeta(ref, !str.empty());
+		if(meta == NULL || str == meta->getString("__nodedef"))
+			return 0;
+		meta->setString("__nodedef", str);
+		reportMetadataChange(ref);
+		return 0;
+	}
+
 	// get_inventory(self)
 	static int l_get_inventory(lua_State *L)
 	{
@@ -2413,6 +2434,7 @@ const luaL_reg NodeMetaRef::methods[] = {
 	method(NodeMetaRef, set_int),
 	method(NodeMetaRef, get_float),
 	method(NodeMetaRef, set_float),
+	method(NodeMetaRef, set_nodedef),
 	method(NodeMetaRef, get_inventory),
 	method(NodeMetaRef, to_table),
 	method(NodeMetaRef, from_table),

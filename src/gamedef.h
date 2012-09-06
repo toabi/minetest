@@ -39,6 +39,8 @@ class IRollbackReportSink;
 class IGameDef
 {
 public:
+	virtual ~IGameDef(){}
+
 	// These are thread-safe IF they are not edited while running threads.
 	// Thus, first they are set up and then they are only read.
 	virtual IItemDefManager* getItemDefManager()=0;
