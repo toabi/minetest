@@ -33,6 +33,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "modifiedstate.h"
 #include "util/container.h"
 #include "nodetimer.h"
+#include "nodedef.h" // For ContentFeatures
+#include "util/pointer.h" // HybridPtr
 
 extern "C" {
 	#include "sqlite3.h"
@@ -205,12 +207,15 @@ public:
 	// throws InvalidPositionException if not found
 	MapNode getNode(v3s16 p);
 
+	// Returns a CONTENT_IGNORE node if not found
+	MapNode getNodeNoEx(v3s16 p);
+	
+	// Returns a NULL pointer if not found
+	HybridPtr<const ContentFeatures> getNodeDefNoEx(v3s16 p);
+
 	// throws InvalidPositionException if not found
 	void setNode(v3s16 p, MapNode & n);
 	
-	// Returns a CONTENT_IGNORE node if not found
-	MapNode getNodeNoEx(v3s16 p);
-
 	void unspreadLight(enum LightBank bank,
 			core::map<v3s16, u8> & from_nodes,
 			core::map<v3s16, bool> & light_sources,
