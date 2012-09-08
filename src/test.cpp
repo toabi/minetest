@@ -148,6 +148,19 @@ struct TestBase
 
 struct TestUtilities: public TestBase
 {
+	class TestThing
+	{
+		bool *m_dst_destructed;
+	public:
+		TestThing(bool *dst_destructed):
+			m_dst_destructed(dst_destructed)
+		{}
+		~TestThing()
+		{
+			*m_dst_destructed = true;
+		}
+	};
+
 	void Run()
 	{
 		/*infostream<<"wrapDegrees(100.0) = "<<wrapDegrees(100.0)<<std::endl;
@@ -166,6 +179,29 @@ struct TestUtilities: public TestBase
 		UASSERT(removeStringEnd("bc", ends) == "b");
 		UASSERT(removeStringEnd("12c", ends) == "12");
 		UASSERT(removeStringEnd("foo", ends) == "");
+		
+		bool destructed1 = false;
+		bool destructed2 = false;
+		bool destructed3 = false;
+		{
+			SharedPtr<TestThing> ptr1(new TestThing(&destructed1));
+			HybridPtr<TestThing> ptr2(new TestThing(&destructed2));
+			HybridPtr<const TestThing> ptr3(new TestThing(&destructed3));
+			{
+				SharedPtr<TestThing> ptr12(ptr1);
+				SharedPtr<TestThing> ptr13 = ptr1;
+				HybridPtr<TestThing> ptr22(ptr2);
+				HybridPtr<TestThing> ptr23 = ptr2;
+				HybridPtr<const TestThing> ptr32(ptr3);
+				HybridPtr<const TestThing> ptr33 = ptr3;
+			}
+			UASSERT(destructed1 == false);
+			UASSERT(destructed2 == false);
+			UASSERT(destructed3 == false);
+		}
+		UASSERT(destructed1 == true);
+		UASSERT(destructed2 == true);
+		UASSERT(destructed3 == true);
 	}
 };
 
