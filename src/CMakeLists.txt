@@ -153,7 +153,7 @@ configure_file(
 )
 
 set(common_SRCS
-	mapnode_with_def.cpp
+	node_with_def.cpp
 	rollback_interface.cpp
 	rollback.cpp
 	genericobject.cpp
