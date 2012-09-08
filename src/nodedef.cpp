@@ -214,7 +214,7 @@ void ContentFeatures::reset()
 	sound_dug = SimpleSoundSpec();
 }
 
-void ContentFeatures::serialize(std::ostream &os)
+void ContentFeatures::serialize(std::ostream &os) const
 {
 	writeU8(os, 5); // version
 	os<<serializeString(name);

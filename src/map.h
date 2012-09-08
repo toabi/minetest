@@ -35,6 +35,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "nodetimer.h"
 #include "nodedef.h" // For ContentFeatures
 #include "util/pointer.h" // HybridPtr
+#include "mapnode_with_def.h"
 
 extern "C" {
 	#include "sqlite3.h"
@@ -215,9 +216,13 @@ public:
 
 	// Returns a NULL pointer if not found
 	HybridPtr<const ContentFeatures> getNodeDefNoEx(v3s16 p);
-	
+
 	// throws InvalidPositionException if not found
 	void setNode(v3s16 p, MapNode & n);
+	
+	NodeWithDef getNodeWithDef(v3s16 p);
+	NodeWithDef getNodeWithDefNoEx(v3s16 p);
+	void setNode(v3s16 p, const NodeWithDef &nd);
 	
 	void unspreadLight(enum LightBank bank,
 			core::map<v3s16, u8> & from_nodes,
