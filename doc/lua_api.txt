@@ -1003,6 +1003,8 @@ methods:
 - set_node(pos, node)
 - add_node(pos, node): alias set_node(pos, node)
  ^ Set node at position (node = {name="foo", param1=0, param2=0})
+- set_node_with_def(pos, node, basedef, addef)
+ ^ Set node with a custom definition
 - remove_node(pos)
   ^ Equivalent to set_node(pos, "air")
 - get_node(pos)
