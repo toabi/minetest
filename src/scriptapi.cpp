@@ -1278,6 +1278,12 @@ static ContentFeatures read_content_features(lua_State *L, int index,
 	return f;
 }
 
+static void push_content_features(lua_State *L, const ContentFeatures &f)
+{
+	lua_newtable(L);
+	// TODO
+}
+
 /*
 	Inventory stuff
 */
@@ -3589,6 +3595,36 @@ private:
 		return 1;
 	}
 
+	// EnvRef:get_nodedef(pos)
+	static int l_get_nodedef(lua_State *L)
+	{
+		EnvRef *o = checkobject(L, 1);
+		ServerEnvironment *env = o->m_env;
+		if(env == NULL) return 0;
+		// Do it
+		v3s16 p = read_v3s16(L, 2);
+		MapNode n = env->getMap().getNodeNoEx(p);
+		HybridPtr<const ContentFeatures> f_ptr = env->getMap().getNodeDefNoEx(p);
+		INodeDefManager *ndef = env->getGameDef()->ndef();
+		const ContentFeatures *f_current = f_ptr.get();
+		const ContentFeatures *f_orig = &ndef->get(n);
+		// If exact pointers, return from registered_nodes table
+		if(f_current == f_orig){
+			lua_getglobal(L, "minetest");
+			lua_getfield(L, -1, "registered_nodes");
+			lua_getfield(L, -1, f_current->name.c_str());
+			if(lua_type(L, -1) != LUA_TTABLE)
+				errorstream<<"ERROR: Field \""<<f_current->name
+						<<"\" in registered_nodes is not a table"<<std::endl;
+			return 1;
+		}
+		// Otherwise convert f_current to lua table
+		else{
+			push_content_features(L, *f_current);
+			return 1;
+		}
+	}
+
 	// EnvRef:add_entity(pos, entityname) -> ObjectRef or nil
 	// pos = {x=num, y=num, z=num}
 	static int l_add_entity(lua_State *L)
@@ -3948,6 +3984,7 @@ const luaL_reg EnvRef::methods[] = {
 	method(EnvRef, add_firefly),
 	method(EnvRef, get_meta),
 	method(EnvRef, get_node_timer),
+	method(EnvRef, get_nodedef),
 	method(EnvRef, get_player_by_name),
 	method(EnvRef, get_objects_inside_radius),
 	method(EnvRef, set_timeofday),

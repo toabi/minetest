@@ -1021,6 +1021,7 @@ methods:
   
 - get_meta(pos) -- Get a NodeMetaRef at that position
 - get_node_timer(pos) -- Get NodeTimerRef
+- get_nodedef(pos) -- Get read-only node definition (or nil)
 
 - add_entity(pos, name): Spawn Lua-defined entity at position
   ^ Returns ObjectRef, or nil if failed
