@@ -224,6 +224,8 @@ public:
 	NodeWithDef getNodeWithDefNoEx(v3s16 p);
 	void setNode(v3s16 p, const NodeWithDef &nd);
 	
+	void setNodeDef(v3s16 p, const ContentFeatures *def);
+	
 	void unspreadLight(enum LightBank bank,
 			core::map<v3s16, u8> & from_nodes,
 			core::map<v3s16, bool> & light_sources,
@@ -253,11 +255,15 @@ public:
 			
 	void updateLighting(core::map<v3s16, MapBlock*>  & a_blocks,
 			core::map<v3s16, MapBlock*> & modified_blocks);
-			
+
+	void updateNodeLight(v3s16 p, core::map<v3s16, MapBlock*> &modified_blocks);
+
 	/*
 		These handle lighting but not faces.
 	*/
 	void addNodeAndUpdate(v3s16 p, MapNode n,
+			core::map<v3s16, MapBlock*> &modified_blocks);
+	void addNodeAndUpdate(v3s16 p, NodeWithDef nd,
 			core::map<v3s16, MapBlock*> &modified_blocks);
 	void removeNodeAndUpdate(v3s16 p,
 			core::map<v3s16, MapBlock*> &modified_blocks);
@@ -267,6 +273,8 @@ public:
 		These emit events.
 		Return true if succeeded, false if not.
 	*/
+	bool updateNodeLightWithEvent(v3s16 p);
+	bool addNodeWithEvent(v3s16 p, NodeWithDef nd);
 	bool addNodeWithEvent(v3s16 p, MapNode n);
 	bool removeNodeWithEvent(v3s16 p);
 	

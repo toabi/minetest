@@ -2275,15 +2275,9 @@ private:
 		luaL_checktype(L, 3, LUA_TTABLE);
 		ContentFeatures def_base = read_content_features(L, 2);
 		ContentFeatures def = read_content_features(L, 3, def_base);
-		std::ostringstream os(std::ios::binary);
-		def.serialize(os);
-		const std::string &str = os.str();
-
-		NodeMetadata *meta = getmeta(ref, !str.empty());
-		if(meta == NULL || str == meta->getString("__nodedef"))
-			return 0;
-		meta->setString("__nodedef", str);
+		ref->m_env->getMap().setNodeDef(ref->m_p, &def);
 		reportMetadataChange(ref);
+		ref->m_env->getMap().updateNodeLightWithEvent(ref->m_p);
 		return 0;
 	}
 
@@ -3400,6 +3394,42 @@ private:
 		return l_set_node(L);
 	}
 
+	// EnvRef:set_node_with_def(pos, node, basedef, adddef)
+	// pos = {x=num, y=num, z=num}
+	static int l_set_node_with_def(lua_State *L)
+	{
+		EnvRef *o = checkobject(L, 1);
+		ServerEnvironment *env = o->m_env;
+		if(env == NULL) return 0;
+		INodeDefManager *ndef = env->getGameDef()->ndef();
+		// parameters
+		v3s16 pos = read_v3s16(L, 2);
+		MapNode n = readnode(L, 3, ndef);
+		luaL_checktype(L, 4, LUA_TTABLE);
+		luaL_checktype(L, 5, LUA_TTABLE);
+		ContentFeatures def_base = read_content_features(L, 4);
+		ContentFeatures def = read_content_features(L, 5, def_base);
+		// Do it
+		MapNode n_old = env->getMap().getNodeNoEx(pos);
+		// Call destructor
+		if(ndef->get(n_old).has_on_destruct)
+			scriptapi_node_on_destruct(L, pos, n_old);
+		// Replace node
+		HybridPtr<const ContentFeatures> def_ptr(new ContentFeatures(def));
+		NodeWithDef nd(n, def_ptr);
+		bool succeeded = env->getMap().addNodeWithEvent(pos, nd);
+		if(succeeded){
+			// Call post-destructor
+			if(ndef->get(n_old).has_after_destruct)
+				scriptapi_node_after_destruct(L, pos, n_old);
+			// Call constructor
+			if(ndef->get(n).has_on_construct)
+				scriptapi_node_on_construct(L, pos, n);
+		}
+		lua_pushboolean(L, succeeded);
+		return 1;
+	}
+
 	// EnvRef:remove_node(pos)
 	// pos = {x=num, y=num, z=num}
 	static int l_remove_node(lua_State *L)
@@ -3971,6 +4001,7 @@ const char EnvRef::className[] = "EnvRef";
 const luaL_reg EnvRef::methods[] = {
 	method(EnvRef, set_node),
 	method(EnvRef, add_node),
+	method(EnvRef, set_node_with_def),
 	method(EnvRef, remove_node),
 	method(EnvRef, get_node),
 	method(EnvRef, get_node_or_nil),
