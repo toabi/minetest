@@ -305,9 +305,8 @@ void initializePaths()
     char path[PATH_MAX];
     if(CFURLGetFileSystemRepresentation(resources_url, TRUE, (UInt8 *)path, PATH_MAX))
 	{
-		dstream<<"Bundle resource path: "<<path<<std::endl;
-		//chdir(path);
-		path_share = std::string(path) + "/share";
+		path_share = std::string(path) + "/../";
+		dstream<<"Bundle resource path: "<<path_share<<std::endl;
 	}
 	else
     {

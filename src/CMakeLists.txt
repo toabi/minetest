@@ -122,12 +122,15 @@ else()
 			FIND_LIBRARY(CARBON_LIB Carbon)
 			FIND_LIBRARY(COCOA_LIB Cocoa)
 			FIND_LIBRARY(IOKIT_LIB IOKit)
+			FIND_LIBRARY(COREFOUNDATION_LIB CoreFoundation )
 			mark_as_advanced(
 				CARBON_LIB
 				COCOA_LIB
 				IOKIT_LIB
+				COREFOUNDATION_LIB
 			)
-			SET(CLIENT_PLATFORM_LIBS ${CLIENT_PLATFORM_LIBS} ${CARBON_LIB} ${COCOA_LIB} ${IOKIT_LIB})
+			SET(CLIENT_PLATFORM_LIBS ${CLIENT_PLATFORM_LIBS} ${CARBON_LIB} ${COCOA_LIB} ${IOKIT_LIB} ${COREFOUNDATION_LIB})
+			SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework Cocoa")
 		endif(APPLE)
 	endif(BUILD_CLIENT)
 	find_package(ZLIB REQUIRED)
@@ -436,6 +439,34 @@ if(BUILD_CLIENT)
 				install(FILES ${GETTEXT_ICONV_DLL} DESTINATION ${BINDIR})
 			endif()
 		endif(USE_GETTEXT)
+	endif()
+
+	if(APPLE)
+		# TODO: install Irrlicht.framework into app bundle!
+		# it should be in Contents/Resources/Frameworks/Irrlicht.framework
+		
+		# Compile .xib files
+		# should be in Contents/Resources/MainMenu.nib at the end
+		set (MinetestMac_XIBS
+			MainMenu
+		)
+		# Make sure the 'Resources' Directory is correctly created before we build
+		add_custom_command (TARGET ${PROJECT_NAME} PRE_BUILD
+													COMMAND mkdir -p ${EXECUTABLE_OUTPUT_PATH}/\${CONFIGURATION}/Contents/Resources)
+													find_program(IBTOOL ibtool HINTS "/usr/bin" "${OSX_DEVELOPER_ROOT}/usr/bin")
+													if (${IBTOOL} STREQUAL "IBTOOL-NOTFOUND")
+													  message(SEND_ERROR "ibtool can not be found and is needed to compile the .xib files. It should have been installed with 
+																								the Apple developer tools. The default system paths were searched in addition to ${OSX_DEVELOPER_ROOT}/usr/bin")
+													endif()
+		# Compile the .xib files using the 'ibtool' program with the destination being the app package
+		foreach(xib ${MinetestMac_XIBS})
+			add_custom_command (TARGET ${PROJECT_NAME} POST_BUILD 
+													COMMAND ${IBTOOL} --errors --warnings --notices --output-format human-readable-text 
+																	--compile ${EXECUTABLE_OUTPUT_PATH}/\${CONFIGURATION}/Contents/Resources/${xib}.nib 
+																	${CMAKE_SOURCE_DIR}/misc/mac/${xib}.xib
+													COMMENT "Compiling ${CMAKE_SOURCE_DIR}/${xib}.xib")
+		endforeach()
+
 	endif()
 endif(BUILD_CLIENT)
 
