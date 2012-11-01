@@ -244,6 +244,15 @@ popd
 echo Failed.
 exit /b 1
 
+Compiling on OS X
+-----------------
+
+$ cmake -G Xcode .
+
+Open the resulting `minetest.xcodeproj` and build the `package` target.
+
+You should then find a `minetest-0.x.x-osx.dmg` in the root directory.
+
 License of Minetest-c55 textures and sounds
 -------------------------------------------
 
